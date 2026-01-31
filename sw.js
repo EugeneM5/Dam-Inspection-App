@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dam-inspection-v3';
+const CACHE_NAME = 'dam-inspection-v4';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -30,10 +30,14 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request).then((fetchResponse) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, fetchResponse.clone());
-          return fetchResponse;
-        });
+        // Only cache same-origin requests
+        if (fetchResponse && fetchResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
+          const responseToCache = fetchResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return fetchResponse;
       });
     }).catch(() => caches.match('./index.html'))
   );
