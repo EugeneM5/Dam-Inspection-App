@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e3a5f">
+  <meta name="description" content="Dam Safety Inspection App - Section 3 On-Site Inspection">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dam Inspect">
+  <title>Dam Safety Inspection</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json">
+  
+  <!-- Icons for iOS -->
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  
+  <style>
+    /* Ensure full height on mobile */
+    html, body, #root {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+    
+    /* Hide scrollbars but allow scrolling */
+    .scroll-container {
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Offline indicator */
+    .offline-banner {
+      background: #f59e0b;
+      color: white;
+      text-align: center;
+      padding: 4px;
+      font-size: 12px;
+    }
+    
+    /* Install prompt */
+    .install-prompt {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: #1e3a5f;
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    
+    // Lucide icons
+    const Save = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
+    const Download = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
+    const Upload = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
+    const Mic = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>;
+    const MicOff = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="2" y1="2" x2="22" y2="22"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/><path d="M5 10v2a7 7 0 0 0 12 5"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/><line x1="12" y1="19" x2="12" y2="22"/></svg>;
+    const AlertCircle = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+    const CheckCircle = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+    const Eye = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>;
+    const Activity = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
+    const Menu = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>;
+    const X = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+    const Wifi = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 20 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>;
+    const WifiOff = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="2" y1="2" x2="22" y2="22"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 4.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/><path d="M16.85 11.25a10 10 0 0 1 2.22 1.68"/><path d="M5 13a10 10 0 0 1 5.24-2.76"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>;
+
+    // Storage helper using localStorage for offline support
+    const storage = {
+      get: (key) => {
+        try {
+          const value = localStorage.getItem(key);
+          return value ? { value } : null;
+        } catch (e) {
+          console.error('Storage get error:', e);
+          return null;
+        }
+      },
+      set: (key, value) => {
+        try {
+          localStorage.setItem(key, value);
+          return { key, value };
+        } catch (e) {
+          console.error('Storage set error:', e);
+          return null;
+        }
+      }
+    };
+
+    const Section3Inspection = () => {
+      const [activeTab, setActiveTab] = useState('general');
+      const [status, setStatus] = useState('');
+      const [loading, setLoading] = useState(true);
+      const [damName, setDamName] = useState('');
+      const [isRecording, setIsRecording] = useState(false);
+      const [currentField, setCurrentField] = useState(null);
+      const [isOnline, setIsOnline] = useState(navigator.onLine);
+      const [showMenu, setShowMenu] = useState(false);
+      const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+      const [deferredPrompt, setDeferredPrompt] = useState(null);
+      const recognitionRef = useRef(null);
+      const importFileRef = useRef(null);
+
+      const [inspection, setInspection] = useState({
+        general: {
+          access: '',
+          routineReports: '',
+          emergencyWarning: '',
+          illumination: '',
+          waterLevel: '',
+          weatherConditions: ''
+        },
+        crest: {
+          condition: '',
+          vegetation: '',
+          animalActivity: '',
+          settlement: ''
+        },
+        upstream: {
+          slopeProtection: '',
+          condition: '',
+          vegetation: '',
+          animalBurrows: ''
+        },
+        downstream: {
+          slopeProtection: '',
+          condition: '',
+          vegetation: '',
+          seepage: '',
+          animalActivity: ''
+        },
+        toe: {
+          condition: '',
+          erosion: '',
+          seepage: '',
+          vegetation: '',
+          drainageSystem: '',
+          valleyFloor: ''
+        },
+        spillway: {
+          description: '',
+          condition: '',
+          vegetation: '',
+          erosion: ''
+        },
+        outlet: {
+          description: '',
+          operation: '',
+          condition: '',
+          access: '',
+          maintenance: '',
+          seepage: ''
+        },
+        basin: {
+          condition: '',
+          erosion: '',
+          seepage: ''
+        },
+        monitoring: {
+          description: '',
+          settlementMonitoring: '',
+          seepageMonitoring: ''
+        },
+        crestSurvey: [
+          { chainage: '0', level: '', freeboard: '', comment: 'Left Flank' }
+        ]
+      });
+
+      useEffect(() => {
+        loadData();
+        
+        // Online/offline detection
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        
+        // PWA install prompt
+        const handleBeforeInstall = (e) => {
+          e.preventDefault();
+          setDeferredPrompt(e);
+          setShowInstallPrompt(true);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+        
+        return () => {
+          window.removeEventListener('online', handleOnline);
+          window.removeEventListener('offline', handleOffline);
+          window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+        };
+      }, []);
+
+      const handleInstall = async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            setShowInstallPrompt(false);
+          }
+          setDeferredPrompt(null);
+        }
+      };
+
+      const loadData = () => {
+        setLoading(true);
+        try {
+          const mainFeaturesResult = storage.get('dam-main-features');
+          if (mainFeaturesResult?.value) {
+            const mainFeatures = JSON.parse(mainFeaturesResult.value);
+            setDamName(mainFeatures.damName || 'Unknown Dam');
+          }
+
+          const section3Result = storage.get('dam-section3');
+          if (section3Result?.value) {
+            setInspection(JSON.parse(section3Result.value));
+            setStatus('Loaded existing data');
+          } else {
+            setStatus('Ready for inspection');
+          }
+        } catch (error) {
+          console.error('Load error:', error);
+          setStatus('Starting fresh');
+        }
+        setLoading(false);
+        setTimeout(() => setStatus(''), 3000);
+      };
+
+      const saveData = () => {
+        setStatus('Saving...');
+        try {
+          storage.set('dam-section3', JSON.stringify(inspection));
+          setStatus('✓ Saved successfully!');
+          setTimeout(() => setStatus(''), 3000);
+        } catch (error) {
+          console.error('Save error:', error);
+          setStatus('Error saving');
+          setTimeout(() => setStatus(''), 3000);
+        }
+      };
+
+      const updateField = (section, field, value) => {
+        setInspection(prev => ({
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [field]: value
+          }
+        }));
+      };
+
+      const addSurveyPoint = () => {
+        setInspection(prev => ({
+          ...prev,
+          crestSurvey: [...prev.crestSurvey, { chainage: '', level: '', freeboard: '', comment: '' }]
+        }));
+      };
+
+      const updateSurveyPoint = (index, field, value) => {
+        const updated = [...inspection.crestSurvey];
+        updated[index][field] = value;
+        
+        if (field === 'level' && value) {
+          try {
+            const mainFeaturesResult = storage.get('dam-main-features');
+            if (mainFeaturesResult?.value) {
+              const mainFeatures = JSON.parse(mainFeaturesResult.value);
+              const fsl = parseFloat(mainFeatures.fsl);
+              if (!isNaN(fsl)) {
+                updated[index].freeboard = (parseFloat(value) - fsl).toFixed(2);
+              }
+            }
+          } catch (error) {
+            console.error('Freeboard calc error:', error);
+          }
+        }
+        
+        setInspection(prev => ({ ...prev, crestSurvey: updated }));
+      };
+
+      const removeSurveyPoint = (index) => {
+        setInspection(prev => ({
+          ...prev,
+          crestSurvey: prev.crestSurvey.filter((_, i) => i !== index)
+        }));
+      };
+
+      const startRecording = (section, field) => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          recognitionRef.current = new SpeechRecognition();
+          recognitionRef.current.continuous = true;
+          recognitionRef.current.interimResults = true;
+
+          setCurrentField({ section, field });
+
+          recognitionRef.current.onresult = (event) => {
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript + ' ';
+              }
+            }
+            if (finalTranscript) {
+              setInspection(prev => ({
+                ...prev,
+                [section]: {
+                  ...prev[section],
+                  [field]: prev[section][field] + finalTranscript
+                }
+              }));
+            }
+          };
+
+          recognitionRef.current.start();
+          setIsRecording(true);
+        } else {
+          alert('Voice recording requires Chrome or Safari browser');
+        }
+      };
+
+      const stopRecording = () => {
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+          setIsRecording(false);
+          setCurrentField(null);
+        }
+      };
+
+      const exportData = () => {
+        const exportObj = {
+          inspection,
+          damName,
+          exportDate: new Date().toISOString(),
+          appVersion: '1.0'
+        };
+        
+        const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `DamInspection_${damName || 'Draft'}_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setStatus('✓ Exported!');
+        setTimeout(() => setStatus(''), 3000);
+      };
+
+      const handleImport = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setStatus('Importing...');
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const importedData = JSON.parse(event.target.result);
+            
+            if (importedData.inspection) {
+              setInspection(importedData.inspection);
+              if (importedData.damName) setDamName(importedData.damName);
+              setStatus('✓ Imported successfully!');
+            } else {
+              throw new Error('Invalid file format');
+            }
+          } catch (error) {
+            setStatus('Error: Invalid file format');
+          }
+          setTimeout(() => setStatus(''), 3000);
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      };
+
+      const generatePreview = () => {
+        const preview = `DAM SAFETY INSPECTION REPORT
+Section 3: On-Site Inspection
+Dam: ${damName}
+Date: ${new Date().toLocaleDateString()}
+========================================
+
+3.1 GENERAL
+-----------
+Access: ${inspection.general.access}
+Routine inspection reports: ${inspection.general.routineReports}
+Emergency Warning: ${inspection.general.emergencyWarning}
+Illumination: ${inspection.general.illumination}
+Water level on day of inspection: ${inspection.general.waterLevel}
+Weather conditions: ${inspection.general.weatherConditions}
+
+3.2 NON-OVERSPILL CREST
+-----------------------
+Condition: ${inspection.crest.condition}
+Vegetation: ${inspection.crest.vegetation}
+Animal activity: ${inspection.crest.animalActivity}
+Settlement: ${inspection.crest.settlement}
+
+3.3 UPSTREAM FACE
+-----------------
+Slope protection: ${inspection.upstream.slopeProtection}
+Condition: ${inspection.upstream.condition}
+Vegetation: ${inspection.upstream.vegetation}
+Animal burrows: ${inspection.upstream.animalBurrows}
+
+3.4 DOWNSTREAM FACE
+-------------------
+Slope protection: ${inspection.downstream.slopeProtection}
+Condition: ${inspection.downstream.condition}
+Vegetation: ${inspection.downstream.vegetation}
+Seepage: ${inspection.downstream.seepage}
+Animal activity: ${inspection.downstream.animalActivity}
+
+3.5 DOWNSTREAM TOE
+------------------
+Condition: ${inspection.toe.condition}
+Erosion: ${inspection.toe.erosion}
+Seepage: ${inspection.toe.seepage}
+Vegetation: ${inspection.toe.vegetation}
+Drainage system: ${inspection.toe.drainageSystem}
+Valley floor: ${inspection.toe.valleyFloor}
+
+3.6 SPILLWAY
+------------
+Description: ${inspection.spillway.description}
+Condition: ${inspection.spillway.condition}
+Vegetation: ${inspection.spillway.vegetation}
+Erosion: ${inspection.spillway.erosion}
+
+3.7 OUTLET WORKS
+----------------
+Description: ${inspection.outlet.description}
+Operation: ${inspection.outlet.operation}
+Condition: ${inspection.outlet.condition}
+Access: ${inspection.outlet.access}
+Maintenance: ${inspection.outlet.maintenance}
+Seepage: ${inspection.outlet.seepage}
+
+3.8 RESERVOIR BASIN
+-------------------
+Condition: ${inspection.basin.condition}
+Erosion: ${inspection.basin.erosion}
+Seepage: ${inspection.basin.seepage}
+
+3.9 MONITORING
+--------------
+Description: ${inspection.monitoring.description}
+Settlement monitoring: ${inspection.monitoring.settlementMonitoring}
+Seepage monitoring: ${inspection.monitoring.seepageMonitoring}
+
+3.9.1 CREST SURVEY DATA
+-----------------------
+${inspection.crestSurvey.map(p => `Chainage ${p.chainage}m: RL ${p.level}m, Freeboard ${p.freeboard}m - ${p.comment}`).join('\n')}
+
+========================================
+Generated by Dam Safety Inspection App
+`;
+
+        const blob = new Blob([preview], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Section3_Report_${damName || 'Draft'}_${new Date().toISOString().split('T')[0]}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const tabs = [
+        { id: 'general', name: '3.1 General', icon: Eye },
+        { id: 'crest', name: '3.2 Crest', icon: Eye },
+        { id: 'upstream', name: '3.3 Upstream', icon: Eye },
+        { id: 'downstream', name: '3.4 Downstream', icon: Eye },
+        { id: 'toe', name: '3.5 Toe', icon: Eye },
+        { id: 'spillway', name: '3.6 Spillway', icon: Eye },
+        { id: 'outlet', name: '3.7 Outlet', icon: Eye },
+        { id: 'basin', name: '3.8 Basin', icon: Eye },
+        { id: 'monitoring', name: '3.9 Monitoring', icon: Activity },
+        { id: 'survey', name: '3.9.1 Survey', icon: Activity }
+      ];
+
+      const InspectionField = ({ label, section, field, rows = 3, hasVoice = true }) => (
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-sm font-medium text-gray-700">{label}</label>
+            {hasVoice && (
+              <button
+                onClick={() => isRecording && currentField?.section === section && currentField?.field === field 
+                  ? stopRecording() 
+                  : startRecording(section, field)}
+                className={`px-3 py-1 rounded text-xs flex items-center gap-1 ${
+                  isRecording && currentField?.section === section && currentField?.field === field
+                    ? 'bg-red-600 text-white animate-pulse' 
+                    : 'bg-green-600 text-white'
+                }`}
+              >
+                {isRecording && currentField?.section === section && currentField?.field === field ? (
+                  <><MicOff className="w-3 h-3" />Stop</>
+                ) : (
+                  <><Mic className="w-3 h-3" />Voice</>
+                )}
+              </button>
+            )}
+          </div>
+          <textarea
+            value={inspection[section][field]}
+            onChange={(e) => updateField(section, field, e.target.value)}
+            rows={rows}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            placeholder={`Enter ${label.toLowerCase()} observations...`}
+          />
+        </div>
+      );
+
+      if (loading) {
+        return (
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="h-screen flex flex-col bg-gray-50">
+          {/* Offline Banner */}
+          {!isOnline && (
+            <div className="offline-banner flex items-center justify-center gap-2">
+              <WifiOff className="w-3 h-3" />
+              Offline Mode - Data saved locally
+            </div>
+          )}
+          
+          {/* Header */}
+          <div className="bg-blue-900 text-white p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowMenu(!showMenu)} className="p-1">
+                <Menu className="w-6 h-6" />
+              </button>
+              <div>
+                <h1 className="text-lg font-bold">Section 3: Inspection</h1>
+                <p className="text-xs text-blue-200">{damName || 'No dam selected'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isOnline ? <Wifi className="w-4 h-4 text-green-300" /> : <WifiOff className="w-4 h-4 text-yellow-300" />}
+            </div>
+          </div>
+
+          {/* Status Bar */}
+          {status && (
+            <div className={`px-4 py-2 text-sm flex items-center gap-2 ${status.includes('✓') ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+              {status.includes('✓') ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+              {status}
+            </div>
+          )}
+
+          {/* Recording Indicator */}
+          {isRecording && (
+            <div className="bg-red-100 text-red-800 px-4 py-2 text-sm flex items-center gap-2">
+              <div className="animate-pulse">●</div>
+              Recording: {currentField?.section} - {currentField?.field}
+            </div>
+          )}
+
+          {/* Side Menu */}
+          {showMenu && (
+            <div className="fixed inset-0 z-50 flex">
+              <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowMenu(false)}></div>
+              <div className="relative bg-white w-72 h-full shadow-xl overflow-y-auto">
+                <div className="bg-blue-900 text-white p-4 flex justify-between items-center">
+                  <h2 className="font-bold">Navigation</h2>
+                  <button onClick={() => setShowMenu(false)}><X className="w-5 h-5" /></button>
+                </div>
+                
+                <div className="p-4">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">Sections</h3>
+                  {tabs.map(tab => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); setShowMenu(false); }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 ${
+                          activeTab === tab.id ? 'bg-blue-100 text-blue-900 font-medium' : 'hover:bg-gray-100'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {tab.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <div className="border-t p-4">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">Actions</h3>
+                  <button onClick={() => { saveData(); setShowMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 bg-green-600 text-white">
+                    <Save className="w-4 h-4" />Save Data
+                  </button>
+                  <button onClick={() => { exportData(); setShowMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 bg-blue-600 text-white">
+                    <Download className="w-4 h-4" />Export JSON
+                  </button>
+                  <button onClick={() => { generatePreview(); setShowMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 bg-purple-600 text-white">
+                    <Download className="w-4 h-4" />Export Report
+                  </button>
+                  <input ref={importFileRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+                  <button onClick={() => importFileRef.current?.click()} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 bg-orange-600 text-white">
+                    <Upload className="w-4 h-4" />Import Data
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab Bar */}
+          <div className="bg-white border-b overflow-x-auto flex-shrink-0">
+            <div className="flex px-2 py-1 gap-1" style={{minWidth: 'max-content'}}>
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-3 py-2 rounded text-xs whitespace-nowrap ${
+                    activeTab === tab.id 
+                      ? 'bg-blue-600 text-white font-medium' 
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {tab.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 overflow-y-auto scroll-container p-4">
+            <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-4">
+              {activeTab === 'general' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.1 General</h2>
+                  <InspectionField label="Access" section="general" field="access" rows={2} />
+                  <InspectionField label="Routine inspection reports" section="general" field="routineReports" rows={2} />
+                  <InspectionField label="Emergency Warning" section="general" field="emergencyWarning" rows={2} />
+                  <InspectionField label="Illumination" section="general" field="illumination" rows={2} />
+                  <InspectionField label="Water level on day of inspection" section="general" field="waterLevel" rows={1} />
+                  <InspectionField label="Weather conditions during inspection" section="general" field="weatherConditions" rows={2} />
+                </div>
+              )}
+
+              {activeTab === 'crest' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.2 Non-Overspill Crest</h2>
+                  <InspectionField label="Condition of crest" section="crest" field="condition" />
+                  <InspectionField label="Vegetation" section="crest" field="vegetation" />
+                  <InspectionField label="Animal activity" section="crest" field="animalActivity" rows={2} />
+                  <InspectionField label="Settlement" section="crest" field="settlement" />
+                </div>
+              )}
+
+              {activeTab === 'upstream' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.3 Upstream Face of the Dam</h2>
+                  <InspectionField label="Slope protection" section="upstream" field="slopeProtection" rows={2} />
+                  <InspectionField label="Condition of face" section="upstream" field="condition" />
+                  <InspectionField label="Vegetation" section="upstream" field="vegetation" />
+                  <InspectionField label="Animal burrows" section="upstream" field="animalBurrows" rows={2} />
+                </div>
+              )}
+
+              {activeTab === 'downstream' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.4 Downstream Face of the Dam</h2>
+                  <InspectionField label="Slope protection" section="downstream" field="slopeProtection" rows={2} />
+                  <InspectionField label="Condition of face" section="downstream" field="condition" />
+                  <InspectionField label="Vegetation" section="downstream" field="vegetation" />
+                  <InspectionField label="Seepage" section="downstream" field="seepage" rows={2} />
+                  <InspectionField label="Animal activity" section="downstream" field="animalActivity" rows={2} />
+                </div>
+              )}
+
+              {activeTab === 'toe' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.5 Downstream Toe of the Dam</h2>
+                  <InspectionField label="Condition" section="toe" field="condition" rows={2} />
+                  <InspectionField label="Erosion" section="toe" field="erosion" rows={2} />
+                  <InspectionField label="Seepage" section="toe" field="seepage" rows={2} />
+                  <InspectionField label="Vegetation" section="toe" field="vegetation" rows={2} />
+                  <InspectionField label="Drainage system" section="toe" field="drainageSystem" />
+                  <InspectionField label="Condition of valley floor downstream of toe" section="toe" field="valleyFloor" rows={2} />
+                </div>
+              )}
+
+              {activeTab === 'spillway' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.6 Spillway</h2>
+                  <InspectionField label="Description" section="spillway" field="description" />
+                  <InspectionField label="Condition of spillway" section="spillway" field="condition" rows={4} />
+                  <InspectionField label="Vegetation" section="spillway" field="vegetation" />
+                  <InspectionField label="Erosion" section="spillway" field="erosion" rows={4} />
+                </div>
+              )}
+
+              {activeTab === 'outlet' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.7 Outlet Works</h2>
+                  <InspectionField label="Description" section="outlet" field="description" rows={4} />
+                  <InspectionField label="Operation of valves" section="outlet" field="operation" />
+                  <InspectionField label="Condition" section="outlet" field="condition" />
+                  <InspectionField label="Access to outlet works" section="outlet" field="access" rows={2} />
+                  <InspectionField label="Maintenance and test procedure" section="outlet" field="maintenance" />
+                  <InspectionField label="Seepage along outlet pipe" section="outlet" field="seepage" rows={2} />
+                </div>
+              )}
+
+              {activeTab === 'basin' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.8 Reservoir Basin</h2>
+                  <InspectionField label="Condition" section="basin" field="condition" />
+                  <InspectionField label="Erosion" section="basin" field="erosion" rows={2} />
+                  <InspectionField label="Seepage through basin" section="basin" field="seepage" rows={2} />
+                </div>
+              )}
+
+              {activeTab === 'monitoring' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.9 Monitoring of Dam</h2>
+                  <InspectionField label="Description" section="monitoring" field="description" />
+                  <InspectionField label="Settlement monitoring" section="monitoring" field="settlementMonitoring" />
+                  <InspectionField label="Seepage monitoring" section="monitoring" field="seepageMonitoring" />
+                </div>
+              )}
+
+              {activeTab === 'survey' && (
+                <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800">3.9.1 Embankment Crest Levels</h2>
+                  <p className="text-sm text-gray-600 mb-3">Survey data - freeboard auto-calculated from FSL</p>
+                  
+                  <div className="overflow-x-auto -mx-4 px-4">
+                    <table className="w-full border-collapse border text-sm" style={{minWidth: '500px'}}>
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="border px-2 py-2">Chainage (m)</th>
+                          <th className="border px-2 py-2">R.L. (m)</th>
+                          <th className="border px-2 py-2">Freeboard (m)</th>
+                          <th className="border px-2 py-2">Comment</th>
+                          <th className="border px-2 py-2 w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {inspection.crestSurvey.map((point, index) => (
+                          <tr key={index}>
+                            <td className="border p-1">
+                              <input type="text" value={point.chainage} onChange={(e) => updateSurveyPoint(index, 'chainage', e.target.value)} className="w-full px-2 py-1 text-sm border rounded" />
+                            </td>
+                            <td className="border p-1">
+                              <input type="text" value={point.level} onChange={(e) => updateSurveyPoint(index, 'level', e.target.value)} className="w-full px-2 py-1 text-sm border rounded" />
+                            </td>
+                            <td className="border p-1">
+                              <input type="text" value={point.freeboard} readOnly className="w-full px-2 py-1 text-sm bg-gray-100 rounded" />
+                            </td>
+                            <td className="border p-1">
+                              <input type="text" value={point.comment} onChange={(e) => updateSurveyPoint(index, 'comment', e.target.value)} className="w-full px-2 py-1 text-sm border rounded" />
+                            </td>
+                            <td className="border p-1 text-center">
+                              {index > 0 && (
+                                <button onClick={() => removeSurveyPoint(index)} className="text-red-600 font-bold">×</button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <button onClick={addSurveyPoint} className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
+                    + Add Survey Point
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Action Bar */}
+          <div className="bg-white border-t p-3 flex justify-center gap-3">
+            <button onClick={saveData} className="flex-1 max-w-xs px-4 py-3 bg-green-600 text-white rounded-lg font-medium flex items-center justify-center gap-2">
+              <Save className="w-5 h-5" />Save
+            </button>
+            <button onClick={exportData} className="flex-1 max-w-xs px-4 py-3 bg-blue-600 text-white rounded-lg font-medium flex items-center justify-center gap-2">
+              <Download className="w-5 h-5" />Export
+            </button>
+          </div>
+
+          {/* Install Prompt */}
+          {showInstallPrompt && (
+            <div className="install-prompt">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-bold">Install App</h3>
+                <button onClick={() => setShowInstallPrompt(false)} className="text-white opacity-70">×</button>
+              </div>
+              <p className="text-sm opacity-90 mb-3">Add Dam Inspection to your home screen for offline access.</p>
+              <button onClick={handleInstall} className="w-full py-2 bg-white text-blue-900 rounded font-medium">
+                Install
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Section3Inspection />);
+  </script>
+
+  <!-- Register Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registered:', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
