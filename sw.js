@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dam-inspection-v6';
+const CACHE_NAME = 'dam-inspection-v8';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
