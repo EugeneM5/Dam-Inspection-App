@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dam-inspection-v4';
+const CACHE_NAME = 'dam-inspection-v6';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -30,7 +30,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request).then((fetchResponse) => {
-        // Only cache same-origin requests
         if (fetchResponse && fetchResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
           const responseToCache = fetchResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
