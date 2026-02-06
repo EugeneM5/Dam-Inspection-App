@@ -13,17 +13,188 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Local library files for offline support -->
+  <script src="./react.min.js"></script>
+  <script src="./react-dom.min.js"></script>
+  <script src="./babel.min.js"></script>
+  <script src="./jszip.min.js"></script>
   
   <style>
-    html, body, #root { height: 100%; margin: 0; overflow: hidden; }
+    /* Reset and base */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; margin: 0; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
     textarea { resize: none; -webkit-appearance: none; -webkit-user-select: text; user-select: text; }
+    button { cursor: pointer; border: none; }
+    
+    /* Photo grid */
     .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
     .photo-thumb { aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; }
+    
+    /* Layout */
+    .flex { display: flex; }
+    .flex-1 { flex: 1 1 0%; }
+    .flex-col { flex-direction: column; }
+    .flex-shrink-0 { flex-shrink: 0; }
+    .block { display: block; }
+    .hidden { display: none; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-1 { gap: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .space-y-1 > * + * { margin-top: 0.25rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    
+    /* Sizing */
+    .w-3 { width: 0.75rem; }
+    .w-4 { width: 1rem; }
+    .w-5 { width: 1.25rem; }
+    .w-6 { width: 1.5rem; }
+    .w-8 { width: 2rem; }
+    .w-12 { width: 3rem; }
+    .w-16 { width: 4rem; }
+    .w-72 { width: 18rem; }
+    .w-full { width: 100%; }
+    .h-3 { height: 0.75rem; }
+    .h-4 { height: 1rem; }
+    .h-5 { height: 1.25rem; }
+    .h-6 { height: 1.5rem; }
+    .h-8 { height: 2rem; }
+    .h-12 { height: 3rem; }
+    .h-16 { height: 4rem; }
+    .h-32 { height: 8rem; }
+    .h-40 { height: 10rem; }
+    .h-full { height: 100%; }
+    .h-screen { height: 100vh; }
+    .min-h-screen { min-height: 100vh; }
+    .max-w-md { max-width: 28rem; }
+    .max-w-2xl { max-width: 42rem; }
+    .max-w-full { max-width: 100%; }
+    .max-h-full { max-height: 100%; }
+    .max-h-\\[60vh\\] { max-height: 60vh; }
+    .max-h-\\[80vh\\] { max-height: 80vh; }
+    
+    /* Spacing */
+    .p-1 { padding: 0.25rem; }
+    .p-2 { padding: 0.5rem; }
+    .p-3 { padding: 0.75rem; }
+    .p-4 { padding: 1rem; }
+    .p-6 { padding: 1.5rem; }
+    .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .pb-3 { padding-bottom: 0.75rem; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-5 { margin-bottom: 1.25rem; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-3 { margin-top: 0.75rem; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .-mx-3 { margin-left: -0.75rem; margin-right: -0.75rem; }
+    
+    /* Colors */
+    .bg-white { background-color: #fff; }
+    .bg-black { background-color: #000; }
+    .bg-gray-50 { background-color: #f9fafb; }
+    .bg-gray-100 { background-color: #f3f4f6; }
+    .bg-gray-200 { background-color: #e5e7eb; }
+    .bg-gray-600 { background-color: #4b5563; }
+    .bg-gray-700 { background-color: #374151; }
+    .bg-blue-600 { background-color: #2563eb; }
+    .bg-blue-800 { background-color: #1e40af; }
+    .bg-blue-900 { background-color: #1e3a5f; }
+    .bg-green-50 { background-color: #f0fdf4; }
+    .bg-green-600 { background-color: #16a34a; }
+    .bg-red-600 { background-color: #dc2626; }
+    .bg-purple-500 { background-color: #a855f7; }
+    .bg-purple-600 { background-color: #9333ea; }
+    .bg-orange-600 { background-color: #ea580c; }
+    .bg-teal-600 { background-color: #0d9488; }
+    .bg-amber-500 { background-color: #f59e0b; }
+    .bg-opacity-50 { background-color: rgba(0,0,0,0.5); }
+    .bg-opacity-70 { background-color: rgba(0,0,0,0.7); }
+    .bg-opacity-90 { background-color: rgba(0,0,0,0.9); }
+    .text-white { color: #fff; }
+    .text-gray-400 { color: #9ca3af; }
+    .text-gray-500 { color: #6b7280; }
+    .text-gray-600 { color: #4b5563; }
+    .text-gray-700 { color: #374151; }
+    .text-green-300 { color: #86efac; }
+    .text-green-700 { color: #15803d; }
+    .text-blue-300 { color: #93c5fd; }
+    .text-amber-300 { color: #fcd34d; }
+    .text-red-600 { color: #dc2626; }
+    
+    /* Borders */
+    .border { border: 1px solid #e5e7eb; }
+    .border-b { border-bottom: 1px solid #e5e7eb; }
+    .border-t { border-top: 1px solid #e5e7eb; }
+    .border-b-2 { border-bottom: 2px solid; }
+    .border-gray-200 { border-color: #e5e7eb; }
+    .border-gray-300 { border-color: #d1d5db; }
+    .border-blue-900 { border-color: #1e3a5f; }
+    .rounded { border-radius: 0.25rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-t-xl { border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; }
+    .rounded-full { border-radius: 9999px; }
+    
+    /* Typography */
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    .italic { font-style: italic; }
+    .uppercase { text-transform: uppercase; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    
+    /* Position */
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .fixed { position: fixed; }
+    .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+    .z-50 { z-index: 50; }
+    
+    /* Effects */
+    .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); }
+    .opacity-50 { opacity: 0.5; }
+    .overflow-hidden { overflow: hidden; }
+    .overflow-x-auto { overflow-x: auto; }
+    .overflow-y-auto { overflow-y: auto; }
+    .object-cover { object-fit: cover; }
+    .object-contain { object-fit: contain; }
+    .cursor-pointer { cursor: pointer; }
+    
+    /* Animations */
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .animate-spin { animation: spin 1s linear infinite; }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    
+    /* Focus states */
+    .focus\\:outline-none:focus { outline: none; }
+    .focus\\:ring-2:focus { box-shadow: 0 0 0 2px; }
+    .focus\\:ring-blue-500:focus { box-shadow: 0 0 0 2px #3b82f6; }
+    .focus\\:ring-green-500:focus { box-shadow: 0 0 0 2px #22c55e; }
+    
+    /* Hover states */
+    .hover\\:bg-blue-700:hover { background-color: #1d4ed8; }
+    .hover\\:bg-green-500:hover { background-color: #22c55e; }
+    .hover\\:bg-red-50:hover { background-color: #fef2f2; }
   </style>
 </head>
 <body>
@@ -38,7 +209,7 @@
     class DamDB {
       constructor() {
         this.dbName = 'DamInspectionDB';
-        this.version = 1;
+        this.version = 2; // Bumped for audios store
         this.db = null;
       }
 
@@ -58,6 +229,11 @@
               const photoStore = db.createObjectStore('photos', { keyPath: 'id' });
               photoStore.createIndex('projectId', 'projectId', { unique: false });
               photoStore.createIndex('fieldKey', 'fieldKey', { unique: false });
+            }
+            if (!db.objectStoreNames.contains('audios')) {
+              const audioStore = db.createObjectStore('audios', { keyPath: 'id' });
+              audioStore.createIndex('projectId', 'projectId', { unique: false });
+              audioStore.createIndex('fieldKey', 'fieldKey', { unique: false });
             }
             if (!db.objectStoreNames.contains('settings')) {
               db.createObjectStore('settings', { keyPath: 'key' });
@@ -240,19 +416,20 @@
       const [activeTab, setActiveTab] = useState('general');
       const [status, setStatus] = useState('');
       const [loading, setLoading] = useState(true);
-      const [isRecording, setIsRecording] = useState(false);
-      const [currentField, setCurrentField] = useState(null);
       const [isOnline, setIsOnline] = useState(navigator.onLine);
       const [showMenu, setShowMenu] = useState(false);
       const [aiProcessing, setAiProcessing] = useState(null);
       const [photoViewer, setPhotoViewer] = useState(null);
       const [storageUsed, setStorageUsed] = useState('');
-      const recognitionRef = useRef(null);
       const importFileRef = useRef(null);
       const cameraInputRef = useRef(null);
       const [cameraTarget, setCameraTarget] = useState(null);
       const [pendingPhoto, setPendingPhoto] = useState(null); // {data, fieldKey, section, field}
       const [photoDescription, setPhotoDescription] = useState('');
+      const [audioRecording, setAudioRecording] = useState(null); // {section, field}
+      const [fieldAudios, setFieldAudios] = useState({});
+      const mediaRecorderRef = useRef(null);
+      const audioChunksRef = useRef([]);
       
       const inspectionRef = useRef(getEmptyInspection());
       const [fieldPhotos, setFieldPhotos] = useState({});
@@ -323,6 +500,20 @@
             photoMap[p.fieldKey].push(p);
           });
           setFieldPhotos(photoMap);
+
+          // Load audio references for this project
+          try {
+            const projectAudios = await db.getByIndex('audios', 'projectId', projectId);
+            const audioMap = {};
+            projectAudios.forEach(a => {
+              if (!audioMap[a.fieldKey]) audioMap[a.fieldKey] = [];
+              audioMap[a.fieldKey].push(a);
+            });
+            setFieldAudios(audioMap);
+          } catch (e) {
+            // Audios store might not exist yet
+            setFieldAudios({});
+          }
 
           setCurrentProjectId(projectId);
           await db.put('settings', { key: 'lastActiveProject', value: projectId });
@@ -613,76 +804,144 @@
       // Capitalize first letter of a string
       const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-      // Voice recording
-      const startRecording = (section, field) => {
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-          const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-          recognitionRef.current = new SR();
-          recognitionRef.current.continuous = true;
-          recognitionRef.current.interimResults = false;
-          recognitionRef.current.lang = 'en-US';
-          setCurrentField({ section, field });
-
-          recognitionRef.current.onresult = (event) => {
-            const result = event.results[event.results.length - 1];
-            if (result.isFinal) {
-              let transcript = result[0].transcript.trim();
-              if (transcript) {
-                // Capitalize the first letter of the transcript
-                transcript = capitalize(transcript);
-                
-                let cur = inspectionRef.current[section][field] || '';
-                
-                if (cur) {
-                  // Ensure previous text ends with punctuation before adding new sentence
-                  cur = cur.trimEnd();
-                  if (!/[.!?]$/.test(cur)) {
-                    cur += '.';
-                  }
-                  cur += ' ';
-                }
-                
-                inspectionRef.current[section][field] = cur + transcript;
-                forceUpdate(n => n + 1);
-              }
-            }
-          };
-
-          recognitionRef.current.onerror = () => { setIsRecording(false); setCurrentField(null); };
-          try {
-            recognitionRef.current.start();
-            setIsRecording(true);
-            setStatus('🎤 Recording...');
-          } catch (e) {
-            setStatus('Cannot start recording');
-            setTimeout(() => setStatus(''), 2000);
-          }
-        } else { alert('Voice not supported'); }
+      // Get audios for a specific field
+      const getAudioForField = (section, field) => {
+        return fieldAudios[`${section}_${field}`] || [];
       };
 
-      const stopRecording = () => {
-        const field = currentField;
-        setIsRecording(false);
-        if (recognitionRef.current) {
-          try { recognitionRef.current.stop(); } catch(e) {}
-          recognitionRef.current = null;
+      // Audio Recording (works offline - uses MediaRecorder API)
+      const startAudioRecording = async (section, field) => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorderRef.current = new MediaRecorder(stream);
+          audioChunksRef.current = [];
+          
+          mediaRecorderRef.current.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              audioChunksRef.current.push(e.data);
+            }
+          };
+          
+          mediaRecorderRef.current.onstop = async () => {
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+              const fieldKey = `${section}_${field}`;
+              const audioRecord = {
+                id: `audio-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                projectId: currentProjectId,
+                fieldKey,
+                data: reader.result,
+                timestamp: new Date().toISOString()
+              };
+              
+              await db.put('audios', audioRecord);
+              setFieldAudios(prev => ({
+                ...prev,
+                [fieldKey]: [...(prev[fieldKey] || []), audioRecord]
+              }));
+              setStatus('✓ Audio saved! Transcribe when online.');
+              setTimeout(() => setStatus(''), 3000);
+            };
+            reader.readAsDataURL(audioBlob);
+            
+            // Stop all tracks
+            stream.getTracks().forEach(track => track.stop());
+          };
+          
+          mediaRecorderRef.current.start();
+          setAudioRecording({ section, field });
+          setStatus('🎙️ Recording audio...');
+        } catch (err) {
+          console.error('Audio recording error:', err);
+          setStatus('Cannot access microphone');
+          setTimeout(() => setStatus(''), 2000);
         }
-        setCurrentField(null);
+      };
+
+      const stopAudioRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+        }
+        setAudioRecording(null);
+      };
+
+      // Transcribe audio using AI when online
+      const transcribeAudio = async (audio, section, field) => {
+        if (!navigator.onLine) {
+          setStatus('Need internet to transcribe');
+          setTimeout(() => setStatus(''), 2000);
+          return;
+        }
         
-        // Add full stop at end and capitalize first letter of entire text
-        if (field) {
-          let text = (inspectionRef.current[field.section][field.field] || '').trimEnd();
-          if (text && !/[.!?]$/.test(text)) {
-            text += '.';
+        setStatus('🤖 Transcribing audio...');
+        try {
+          // Convert audio to base64 for API
+          const base64Audio = audio.data.split(',')[1];
+          
+          const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 1000,
+              messages: [{
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: "Please transcribe this audio recording of a dam inspection note. Fix any grammar issues, ensure sentences start with capital letters and end with full stops. Return ONLY the transcribed and corrected text, nothing else."
+                  },
+                  {
+                    type: "image",
+                    source: {
+                      type: "base64",
+                      media_type: "audio/webm",
+                      data: base64Audio
+                    }
+                  }
+                ]
+              }]
+            })
+          });
+          const data = await response.json();
+          const transcript = data.content?.filter(i => i.type === "text").map(i => i.text).join("") || '';
+          
+          if (transcript) {
+            // Add to field
+            let cur = inspectionRef.current[section][field] || '';
+            if (cur) {
+              cur = cur.trimEnd();
+              if (!/[.!?]$/.test(cur)) cur += '.';
+              cur += ' ';
+            }
+            inspectionRef.current[section][field] = cur + capitalize(transcript);
+            forceUpdate(n => n + 1);
+            
+            // Delete the audio after successful transcription
+            await deleteAudio(audio.id, section, field);
+            setStatus('✓ Transcribed and added!');
+          } else {
+            setStatus('Could not transcribe audio');
           }
-          // Ensure first letter is capitalized
-          text = capitalize(text);
-          inspectionRef.current[field.section][field.field] = text;
-          forceUpdate(n => n + 1);
+        } catch (err) {
+          console.error('Transcription error:', err);
+          setStatus('Transcription failed - audio kept');
         }
-        
-        setStatus('✓ Recording stopped');
-        setTimeout(() => setStatus(''), 2000);
+        setTimeout(() => setStatus(''), 3000);
+      };
+
+      const deleteAudio = async (audioId, section, field) => {
+        try {
+          await db.delete('audios', audioId);
+          const fieldKey = `${section}_${field}`;
+          setFieldAudios(prev => ({
+            ...prev,
+            [fieldKey]: (prev[fieldKey] || []).filter(a => a.id !== audioId)
+          }));
+        } catch (err) {
+          console.error('Delete audio error:', err);
+        }
       };
 
       // Survey
@@ -1348,7 +1607,8 @@ ${manifestEntries}
       const InspectionField = ({ label, section, field, rows = 3 }) => {
         const fPhotos = getPhotosForField(section, field);
         const isAi = aiProcessing === `${section}_${field}`;
-        const isRec = isRecording && currentField?.section === section && currentField?.field === field;
+        const isAudioRec = audioRecording?.section === section && audioRecording?.field === field;
+        const sectionNum = sectionNumbers[section] || section;
 
         return (
           <div className="mb-5 bg-gray-50 rounded-lg p-3">
@@ -1356,21 +1616,43 @@ ${manifestEntries}
               <label className="text-sm font-semibold text-gray-700">{label}</label>
               <div className="flex gap-1">
                 <button onClick={() => openCamera(section, field)} className="p-2 bg-blue-600 text-white rounded-lg" type="button"><Camera className="w-4 h-4" /></button>
-                <button onClick={() => isRec ? stopRecording() : startRecording(section, field)} className={`p-2 rounded-lg ${isRec ? 'bg-red-600 animate-pulse' : 'bg-green-600'} text-white`} type="button">
-                  {isRec ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                <button onClick={() => isAudioRec ? stopAudioRecording() : startAudioRecording(section, field)} className={`p-2 rounded-lg ${isAudioRec ? 'bg-red-600 animate-pulse' : 'bg-green-600'} text-white`} type="button">
+                  {isAudioRec ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                 </button>
                 {isAi && <div className="p-2 bg-purple-500 text-white rounded-lg"><Sparkles className="w-4 h-4 animate-spin" /></div>}
               </div>
             </div>
             <NativeTextArea section={section} field={field} rows={rows} placeholder={`Enter ${label.toLowerCase()} observations...`} />
+            
+            {/* Audio recordings for this field */}
+            {getAudioForField(section, field).length > 0 && (
+              <div className="mt-2 space-y-1">
+                {getAudioForField(section, field).map((audio, idx) => (
+                  <div key={audio.id} className="flex items-center gap-2 bg-green-50 p-2 rounded text-sm">
+                    <span className="text-green-700">🎙️ Audio {idx + 1}</span>
+                    <audio src={audio.data} controls className="h-8 flex-1" />
+                    {navigator.onLine && (
+                      <button onClick={() => transcribeAudio(audio, section, field)} className="px-2 py-1 bg-purple-600 text-white rounded text-xs">Transcribe</button>
+                    )}
+                    <button onClick={() => deleteAudio(audio.id, section, field)} className="p-1 text-red-600"><Trash className="w-4 h-4" /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Photos with captions */}
             {fPhotos.length > 0 && (
               <div className="mt-2">
-                <p className="text-xs text-gray-500 mb-1">{fPhotos.length} photo(s)</p>
-                <div className="photo-grid">
-                  {fPhotos.map((photo) => (
-                    <img key={photo.id} src={photo.data} alt="Inspection" className="photo-thumb border-2 border-gray-200"
-                      onClick={() => setPhotoViewer({ photo, fieldKey: `${section}_${field}` })}
-                    />
+                <div className="space-y-2">
+                  {fPhotos.map((photo, idx) => (
+                    <div key={photo.id} className="bg-white rounded-lg overflow-hidden border border-gray-200">
+                      <img src={photo.data} alt="Inspection" className="w-full h-32 object-cover cursor-pointer"
+                        onClick={() => setPhotoViewer({ photo, fieldKey: `${section}_${field}` })}
+                      />
+                      <p className="text-xs text-gray-600 p-2 italic bg-gray-50">
+                        <span className="font-semibold">Photo {sectionNum}-{idx + 1}:</span> {photo.description || 'No description'}
+                      </p>
+                    </div>
                   ))}
                 </div>
               </div>
