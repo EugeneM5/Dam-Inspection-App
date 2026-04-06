@@ -871,7 +871,8 @@
             headers: {
               "Content-Type": "application/json",
               "x-api-key": savedApiKey,
-              "anthropic-version": "2023-06-01"
+              "anthropic-version": "2023-06-01",
+              "anthropic-dangerous-direct-browser-access": "true"
             },
             body: JSON.stringify({
               model: "claude-sonnet-4-20250514",
@@ -883,7 +884,7 @@
             })
           });
           if (!response.ok) {
-            setStatus('AI unavailable. Applied local tidy.');
+            setStatus(`AI request failed (${response.status}). Applied local tidy.`);
             setTimeout(() => setStatus(''), 2000);
             return toConciseSentences(text);
           }
@@ -1639,6 +1640,10 @@ ${manifestEntries}
             inspectionRef.current[section][field] = improved;
             initialValueRef.current = improved;
             setWordCount(countWords(improved));
+            if (improved === cur) {
+              setStatus('No wording changes needed');
+              setTimeout(() => setStatus(''), 2000);
+            }
           }
         };
 
