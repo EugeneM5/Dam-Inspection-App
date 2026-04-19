@@ -204,7 +204,7 @@
     const { useState, useEffect, useRef, useCallback } = React;
 
     /* =========================================================
-       IndexedDB Storage Layer - supports up to 150MB+
+       IndexedDB Storage Layer - supports up to 300MB+
        ========================================================= */
     class DamDB {
       constructor() {
@@ -439,7 +439,7 @@
       const [fieldPhotos, setFieldPhotos] = useState({});
       const [crestSurvey, setCrestSurvey] = useState([{ chainage: '0', level: '', freeboard: '', comment: 'Left Flank' }]);
       const [, forceUpdate] = useState(0);
-      const MAX_STORAGE = 150 * 1024 * 1024; // 150MB
+      const MAX_STORAGE = 300 * 1024 * 1024; // 300MB
 
       useEffect(() => {
         initApp();
@@ -464,7 +464,7 @@
         const info = await db.getStorageUsed();
         if (info.used > 0) {
           const usedMB = (info.used / 1024 / 1024).toFixed(1);
-          setStorageUsed(`${usedMB} MB / 150 MB`);
+          setStorageUsed(`${usedMB} MB / 300 MB`);
         }
       };
 
@@ -560,7 +560,7 @@
           // Check storage limit
           const info = await db.getStorageUsed();
           if (info.used > MAX_STORAGE) {
-            setStatus('⚠️ Storage limit reached (150MB)! Export and delete old inspections.');
+            setStatus('⚠️ Storage limit reached (300MB)! Export and delete old inspections.');
             setTimeout(() => setStatus(''), 5000);
             return;
           }
@@ -1078,7 +1078,7 @@
 
         const sizeMB = (file.size / 1024 / 1024).toFixed(1);
         if (file.size > MAX_STORAGE) {
-          setStatus(`File too large (${sizeMB} MB). Maximum is 150 MB.`);
+          setStatus(`File too large (${sizeMB} MB). Maximum is 300 MB.`);
           setTimeout(() => setStatus(''), 4000);
           e.target.value = '';
           return;
