@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dam-inspection-v19';
+const CACHE_NAME = 'dam-inspection-v20';
 
 // All resources needed for offline operation
 const ASSETS_TO_CACHE = [
