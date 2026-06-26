@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dam-inspection-v18';
+const CACHE_NAME = 'dam-inspection-v19';
 
 // All resources needed for offline operation
 const ASSETS_TO_CACHE = [
@@ -49,6 +49,15 @@ function isHtmlRequest(request) {
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
+
+  // Don't intercept the speech-to-text model files (huggingface hub / LFS CDN).
+  // Transformers.js manages its own on-device model cache; intercepting here would
+  // double-store ~tens-to-hundreds of MB. The library + WASM from jsdelivr are
+  // still cached by the runtime cache-first handler below for offline reuse.
+  const reqHost = new URL(event.request.url).hostname;
+  if (reqHost.endsWith('huggingface.co') || reqHost.endsWith('hf.co')) {
+    return;
+  }
 
   // Network-first for HTML: fresh app on every load when online, cache when offline.
   if (isHtmlRequest(event.request)) {
