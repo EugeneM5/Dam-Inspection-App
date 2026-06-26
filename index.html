@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#1e3a5f">
   <meta name="description" content="Dam Safety Inspection App - Section 3 On-Site Inspection">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -203,6 +203,9 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
 
+    // Claude model used for AI grammar cleanup. Update here when migrating models.
+    const AI_MODEL = 'claude-sonnet-4-6';
+
     /* =========================================================
        IndexedDB Storage Layer - supports up to 300MB+
        ========================================================= */
@@ -370,6 +373,7 @@
     const Mic = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>;
     const MicOff = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="2" y1="2" x2="22" y2="22"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/><path d="M5 10v2a7 7 0 0 0 12 5"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/><line x1="12" y1="19" x2="12" y2="22"/></svg>;
     const Camera = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>;
+    const Images = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="14" height="14" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m7 14 3-3 4 4"/><path d="M21 8v11a2 2 0 0 1-2 2H8"/></svg>;
     const Sparkles = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>;
     const X = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
     const MenuIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>;
@@ -383,6 +387,7 @@
     const ChevronDown = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="6 9 12 15 18 9"/></svg>;
     const FolderOpen = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>;
     const HardDrive = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>;
+    const ClipboardList = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>;
 
     const countWords = (text) => {
       if (!text || !text.trim()) return 0;
@@ -410,6 +415,8 @@
       const [currentProjectId, setCurrentProjectId] = useState(null);
       const [showProjectModal, setShowProjectModal] = useState(false);
       const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+      const [showDamDetailsModal, setShowDamDetailsModal] = useState(false);
+      const [detailsForm, setDetailsForm] = useState({ inspector: '', registration: '', owner: '', location: '', fsl: '', crestLevel: '' });
       const [newDamName, setNewDamName] = useState('');
       const [newInspectionDate, setNewInspectionDate] = useState(new Date().toISOString().split('T')[0]);
       
@@ -421,10 +428,13 @@
       const [aiProcessing, setAiProcessing] = useState(null);
       const [apiKeyInput, setApiKeyInput] = useState('');
       const [showApiKey, setShowApiKey] = useState(false);
+      const [autoPolish, setAutoPolish] = useState(() => localStorage.getItem('dam-auto-polish') === '1');
       const [photoViewer, setPhotoViewer] = useState(null);
       const [storageUsed, setStorageUsed] = useState('');
       const importFileRef = useRef(null);
       const cameraInputRef = useRef(null);
+      const galleryInputRef = useRef(null);
+      const [projectSearch, setProjectSearch] = useState('');
       const [cameraTarget, setCameraTarget] = useState(null);
       const [pendingPhoto, setPendingPhoto] = useState(null); // {data, fieldKey, section, field}
       const [photoDescription, setPhotoDescription] = useState('');
@@ -434,6 +444,8 @@
       const audioChunksRef = useRef([]);
       const speechRecognitionRef = useRef(null);
       const transcriptRef = useRef('');
+      const autoSaveTimerRef = useRef(null);
+      const dirtyRef = useRef(false);
       
       const inspectionRef = useRef(getEmptyInspection());
       const [fieldPhotos, setFieldPhotos] = useState({});
@@ -441,13 +453,26 @@
       const [, forceUpdate] = useState(0);
       const MAX_STORAGE = 300 * 1024 * 1024; // 300MB
 
+      // Mirror of crestSurvey so the debounced auto-save always reads the latest
+      // value rather than a stale closure captured when the save was scheduled.
+      const crestSurveyRef = useRef(crestSurvey);
+      useEffect(() => { crestSurveyRef.current = crestSurvey; }, [crestSurvey]);
+
       useEffect(() => {
         initApp();
         setApiKeyInput(localStorage.getItem('dam-anthropic-api-key') || '');
         const handleOnline = () => setIsOnline(true);
         const handleOffline = () => setIsOnline(false);
+        const handleBeforeUnload = (e) => {
+          if (dirtyRef.current) {
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+          }
+        };
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
+        window.addEventListener('beforeunload', handleBeforeUnload);
         return () => {
           if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
             mediaRecorderRef.current.stop();
@@ -455,8 +480,12 @@
           if (speechRecognitionRef.current) {
             try { speechRecognitionRef.current.stop(); } catch (e) {}
           }
+          if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+          }
           window.removeEventListener('online', handleOnline);
           window.removeEventListener('offline', handleOffline);
+          window.removeEventListener('beforeunload', handleBeforeUnload);
         };
       }, []);
 
@@ -487,6 +516,14 @@
         setTimeout(() => setStatus(''), 2000);
       };
 
+      const toggleAutoPolish = () => {
+        setAutoPolish(prev => {
+          const next = !prev;
+          localStorage.setItem('dam-auto-polish', next ? '1' : '0');
+          return next;
+        });
+      };
+
       const initApp = async () => {
         setLoading(true);
         try {
@@ -499,9 +536,9 @@
           const lastId = settings?.value;
           
           if (lastId && allProjects.find(p => p.id === lastId)) {
-            await loadProject(lastId, allProjects);
+            await loadProject(lastId);
           } else if (allProjects.length > 0) {
-            await loadProject(allProjects[0].id, allProjects);
+            await loadProject(allProjects[0].id);
           }
           await updateStorageInfo();
         } catch (error) {
@@ -553,9 +590,9 @@
         }
       };
 
-      const saveCurrentProject = async () => {
+      const saveCurrentProject = async (silent = false) => {
         if (!currentProjectId) return;
-        setStatus('Saving...');
+        if (!silent) setStatus('Saving...');
         try {
           // Check storage limit
           const info = await db.getStorageUsed();
@@ -567,7 +604,7 @@
 
           await db.put('inspections', {
             projectId: currentProjectId,
-            data: { ...inspectionRef.current, crestSurvey }
+            data: { ...inspectionRef.current, crestSurvey: crestSurveyRef.current }
           });
 
           // Update project timestamp
@@ -579,12 +616,29 @@
           }
 
           await updateStorageInfo();
-          setStatus('✓ Saved!');
+          dirtyRef.current = false;
+          if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+            autoSaveTimerRef.current = null;
+          }
+          setStatus(silent ? '✓ Auto-saved' : '✓ Saved!');
         } catch (error) {
           console.error('Save error:', error);
           setStatus('Error saving');
         }
         setTimeout(() => setStatus(''), 2000);
+      };
+
+      // Debounced background save. Called whenever inspection text or the survey
+      // table changes so work is never lost if the app is closed without Save.
+      const scheduleAutoSave = () => {
+        dirtyRef.current = true;
+        if (!currentProjectId) return;
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = setTimeout(() => {
+          autoSaveTimerRef.current = null;
+          saveCurrentProject(true);
+        }, 2000);
       };
 
       const createNewProject = async () => {
@@ -648,6 +702,7 @@
           await db.delete('projects', projectId);
           await db.delete('inspections', projectId);
           await db.deleteByIndex('photos', 'projectId', projectId);
+          await db.deleteByIndex('audios', 'projectId', projectId);
 
           const updatedProjects = projects.filter(p => p.id !== projectId);
           setProjects(updatedProjects);
@@ -673,10 +728,109 @@
 
       const getCurrentProject = () => projects.find(p => p.id === currentProjectId);
 
+      // Open the Dam Details editor, seeded from the current project record.
+      const openDamDetails = () => {
+        const p = getCurrentProject();
+        if (!p) {
+          setStatus('Create or select an inspection first');
+          setTimeout(() => setStatus(''), 2000);
+          return;
+        }
+        setDetailsForm({
+          inspector: p.inspector || '',
+          registration: p.registration || '',
+          owner: p.owner || '',
+          location: p.location || '',
+          fsl: p.fsl != null ? String(p.fsl) : '',
+          crestLevel: p.crestLevel != null ? String(p.crestLevel) : ''
+        });
+        setShowDamDetailsModal(true);
+      };
+
+      // Persist dam details onto the project record. Changing FSL recomputes the
+      // freeboard column (crest R.L. minus FSL) for every existing survey row.
+      const saveDamDetails = async () => {
+        const p = getCurrentProject();
+        if (!p) return;
+        const updated = {
+          ...p,
+          inspector: detailsForm.inspector.trim(),
+          registration: detailsForm.registration.trim(),
+          owner: detailsForm.owner.trim(),
+          location: detailsForm.location.trim(),
+          fsl: detailsForm.fsl.trim(),
+          crestLevel: detailsForm.crestLevel.trim(),
+          lastModified: new Date().toISOString()
+        };
+        try {
+          await db.put('projects', updated);
+          setProjects(prev => prev.map(x => x.id === updated.id ? updated : x));
+          const fslNum = parseFloat(updated.fsl);
+          if (!isNaN(fslNum)) {
+            setCrestSurvey(prev => prev.map(row => {
+              const lvl = parseFloat(row.level);
+              return !isNaN(lvl) ? { ...row, freeboard: (lvl - fslNum).toFixed(2) } : row;
+            }));
+            scheduleAutoSave();
+          }
+          setShowDamDetailsModal(false);
+          setStatus('✓ Dam details saved');
+        } catch (error) {
+          console.error('Save dam details error:', error);
+          setStatus('Error saving details');
+        }
+        setTimeout(() => setStatus(''), 2000);
+      };
+
       // Photo handling with IndexedDB
       const openCamera = (section, field) => {
         setCameraTarget({ section, field });
         cameraInputRef.current?.click();
+      };
+
+      const openGallery = (section, field) => {
+        setCameraTarget({ section, field });
+        galleryInputRef.current?.click();
+      };
+
+      // Bulk-add multiple existing photos from the device gallery. Each is
+      // compressed and saved with a default caption (editable later in the viewer).
+      const handleGalleryAdd = async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length || !cameraTarget) { e.target.value = ''; return; }
+        const { section, field } = cameraTarget;
+        const fieldKey = `${section}_${field}`;
+        setCameraTarget(null);
+        setStatus(`Adding ${files.length} photo(s)...`);
+        let added = 0;
+        for (const file of files) {
+          try {
+            const dataUrl = await new Promise((resolve, reject) => {
+              const r = new FileReader();
+              r.onload = (ev) => resolve(ev.target.result);
+              r.onerror = reject;
+              r.readAsDataURL(file);
+            });
+            const compressed = await compressPhoto(dataUrl, 1200, 0.7);
+            const photoRecord = {
+              id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+              projectId: currentProjectId,
+              fieldKey,
+              data: compressed,
+              description: 'No description',
+              timestamp: new Date().toISOString()
+            };
+            await db.put('photos', photoRecord);
+            setFieldPhotos(prev => ({ ...prev, [fieldKey]: [...(prev[fieldKey] || []), photoRecord] }));
+            added++;
+          } catch (err) {
+            console.error('Gallery add error:', err);
+          }
+        }
+        await updateStorageInfo();
+        setStatus(`✓ Added ${added} photo(s)`);
+        setTimeout(() => setStatus(''), 2500);
+        e.target.value = '';
       };
 
       const handlePhotoCapture = async (e) => {
@@ -825,6 +979,7 @@
         }
         inspectionRef.current[section][field] = cur + normalized;
         forceUpdate(n => n + 1);
+        scheduleAutoSave();
       };
 
       const buildOfflineVoiceReference = (timestamp) => {
@@ -875,7 +1030,7 @@
               "anthropic-dangerous-direct-browser-access": "true"
             },
             body: JSON.stringify({
-              model: "claude-sonnet-4-20250514",
+              model: AI_MODEL,
               max_tokens: 500,
               messages: [{
                 role: "user",
@@ -1014,24 +1169,29 @@
       };
 
       // Survey
-      const addSurveyPoint = () => setCrestSurvey(prev => [...prev, { chainage: '', level: '', freeboard: '', comment: '' }]);
+      const addSurveyPoint = () => {
+        setCrestSurvey(prev => [...prev, { chainage: '', level: '', freeboard: '', comment: '' }]);
+        scheduleAutoSave();
+      };
       const updateSurveyPoint = (index, field, value) => {
         setCrestSurvey(prev => {
           const updated = [...prev];
           updated[index] = { ...updated[index], [field]: value };
           if (field === 'level' && value) {
             try {
-              const mf = localStorage.getItem('dam-main-features');
-              if (mf) {
-                const fsl = parseFloat(JSON.parse(mf).fsl);
-                if (!isNaN(fsl)) updated[index].freeboard = (parseFloat(value) - fsl).toFixed(2);
-              }
+              const proj = projects.find(p => p.id === currentProjectId);
+              const fsl = parseFloat(proj?.fsl);
+              if (!isNaN(fsl)) updated[index].freeboard = (parseFloat(value) - fsl).toFixed(2);
             } catch(e) {}
           }
           return updated;
         });
+        scheduleAutoSave();
       };
-      const removeSurveyPoint = (index) => setCrestSurvey(prev => prev.filter((_, i) => i !== index));
+      const removeSurveyPoint = (index) => {
+        setCrestSurvey(prev => prev.filter((_, i) => i !== index));
+        scheduleAutoSave();
+      };
 
       // Export with photos from IndexedDB
       const exportData = async () => {
@@ -1114,7 +1274,14 @@
             
             const inspection = data.inspection || data;
             const dmName = data.damName || 'Imported Dam';
-            
+
+            const dup = projects.find(p => (p.damName || '').toLowerCase() === dmName.toLowerCase());
+            if (dup && !confirm(`An inspection named "${dmName}" already exists.\n\nImport anyway as a separate copy?`)) {
+              setStatus('Import cancelled');
+              setTimeout(() => setStatus(''), 2000);
+              return;
+            }
+
             const newProject = {
               id: `project-${Date.now()}`,
               damName: dmName,
@@ -1188,11 +1355,23 @@
         e.target.value = '';
       };
 
+      // Optional dam/inspector metadata for report headers (only non-empty entries).
+      const getReportMetaLines = (project) => {
+        const lines = [];
+        if (project?.location) lines.push(['Location', project.location]);
+        if (project?.owner) lines.push(['Owner', project.owner]);
+        if (project?.inspector) lines.push(['Inspector', project.inspector + (project.registration ? ' (' + project.registration + ')' : '')]);
+        if (project?.fsl) lines.push(['Full Supply Level (FSL)', project.fsl + ' m']);
+        if (project?.crestLevel) lines.push(['Crest Level', project.crestLevel + ' m']);
+        return lines;
+      };
+
       const generateReport = () => {
         const project = getCurrentProject();
         const d = inspectionRef.current;
         const photoCount = Object.values(fieldPhotos).flat().length;
-        const report = `DAM SAFETY INSPECTION REPORT\nSection 3: On-Site Inspection\nDam: ${project?.damName || 'Unknown'}\nInspection Date: ${project?.inspectionDate || ''}\nGenerated: ${new Date().toLocaleDateString()}\nPhotos: ${photoCount}\n${'='.repeat(40)}\n\n3.1 GENERAL\nAccess: ${d.general.access}\nRoutine Reports: ${d.general.routineReports}\nEmergency Warning: ${d.general.emergencyWarning}\nIllumination: ${d.general.illumination}\nWater Level: ${d.general.waterLevel}\nWeather: ${d.general.weatherConditions}\n\n3.2 NON-OVERSPILL CREST\nCondition: ${d.crest.condition}\nVegetation: ${d.crest.vegetation}\nAnimal Activity: ${d.crest.animalActivity}\nSettlement: ${d.crest.settlement}\n\n3.3 UPSTREAM FACE\nSlope Protection: ${d.upstream.slopeProtection}\nCondition: ${d.upstream.condition}\nVegetation: ${d.upstream.vegetation}\nAnimal Burrows: ${d.upstream.animalBurrows}\n\n3.4 DOWNSTREAM FACE\nSlope Protection: ${d.downstream.slopeProtection}\nCondition: ${d.downstream.condition}\nVegetation: ${d.downstream.vegetation}\nSeepage: ${d.downstream.seepage}\nAnimal Activity: ${d.downstream.animalActivity}\n\n3.5 DOWNSTREAM TOE\nCondition: ${d.toe.condition}\nErosion: ${d.toe.erosion}\nSeepage: ${d.toe.seepage}\nVegetation: ${d.toe.vegetation}\nDrainage: ${d.toe.drainageSystem}\nValley Floor: ${d.toe.valleyFloor}\n\n3.6 SPILLWAY\nDescription: ${d.spillway.description}\nCondition: ${d.spillway.condition}\nVegetation: ${d.spillway.vegetation}\nErosion: ${d.spillway.erosion}\n\n3.7 OUTLET WORKS\nDescription: ${d.outlet.description}\nOperation: ${d.outlet.operation}\nCondition: ${d.outlet.condition}\nAccess: ${d.outlet.access}\nMaintenance: ${d.outlet.maintenance}\nSeepage: ${d.outlet.seepage}\n\n3.8 RESERVOIR BASIN\nCondition: ${d.basin.condition}\nErosion: ${d.basin.erosion}\nSeepage: ${d.basin.seepage}\n\n3.9 MONITORING\nDescription: ${d.monitoring.description}\nSettlement: ${d.monitoring.settlementMonitoring}\nSeepage: ${d.monitoring.seepageMonitoring}\n\n3.9.1 CREST SURVEY\n${crestSurvey.map(p => `Ch ${p.chainage}m: RL ${p.level}m, FB ${p.freeboard}m - ${p.comment}`).join('\n')}`;
+        const metaTxt = getReportMetaLines(project).map(([k, v]) => `${k}: ${v}`).join('\n');
+        const report = `DAM SAFETY INSPECTION REPORT\nSection 3: On-Site Inspection\nDam: ${project?.damName || 'Unknown'}\nInspection Date: ${project?.inspectionDate || ''}\n${metaTxt ? metaTxt + '\n' : ''}Generated: ${new Date().toLocaleDateString()}\nPhotos: ${photoCount}\n${'='.repeat(40)}\n\n3.1 GENERAL\nAccess: ${d.general.access}\nRoutine Reports: ${d.general.routineReports}\nEmergency Warning: ${d.general.emergencyWarning}\nIllumination: ${d.general.illumination}\nWater Level: ${d.general.waterLevel}\nWeather: ${d.general.weatherConditions}\n\n3.2 NON-OVERSPILL CREST\nCondition: ${d.crest.condition}\nVegetation: ${d.crest.vegetation}\nAnimal Activity: ${d.crest.animalActivity}\nSettlement: ${d.crest.settlement}\n\n3.3 UPSTREAM FACE\nSlope Protection: ${d.upstream.slopeProtection}\nCondition: ${d.upstream.condition}\nVegetation: ${d.upstream.vegetation}\nAnimal Burrows: ${d.upstream.animalBurrows}\n\n3.4 DOWNSTREAM FACE\nSlope Protection: ${d.downstream.slopeProtection}\nCondition: ${d.downstream.condition}\nVegetation: ${d.downstream.vegetation}\nSeepage: ${d.downstream.seepage}\nAnimal Activity: ${d.downstream.animalActivity}\n\n3.5 DOWNSTREAM TOE\nCondition: ${d.toe.condition}\nErosion: ${d.toe.erosion}\nSeepage: ${d.toe.seepage}\nVegetation: ${d.toe.vegetation}\nDrainage: ${d.toe.drainageSystem}\nValley Floor: ${d.toe.valleyFloor}\n\n3.6 SPILLWAY\nDescription: ${d.spillway.description}\nCondition: ${d.spillway.condition}\nVegetation: ${d.spillway.vegetation}\nErosion: ${d.spillway.erosion}\n\n3.7 OUTLET WORKS\nDescription: ${d.outlet.description}\nOperation: ${d.outlet.operation}\nCondition: ${d.outlet.condition}\nAccess: ${d.outlet.access}\nMaintenance: ${d.outlet.maintenance}\nSeepage: ${d.outlet.seepage}\n\n3.8 RESERVOIR BASIN\nCondition: ${d.basin.condition}\nErosion: ${d.basin.erosion}\nSeepage: ${d.basin.seepage}\n\n3.9 MONITORING\nDescription: ${d.monitoring.description}\nSettlement: ${d.monitoring.settlementMonitoring}\nSeepage: ${d.monitoring.seepageMonitoring}\n\n3.9.1 CREST SURVEY\n${crestSurvey.map(p => `Ch ${p.chainage}m: RL ${p.level}m, FB ${p.freeboard}m - ${p.comment}`).join('\n')}`;
         const blob = new Blob([report], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1273,6 +1452,7 @@
           para('Section 3: On-Site Inspection', 'Heading1'),
           para(`Dam: ${project?.damName || 'Unknown'}`),
           para(`Inspection Date: ${project?.inspectionDate || ''}`),
+          getReportMetaLines(project).map(([k, v]) => para(`${k}: ${v}`)).join(''),
           para(`Generated: ${new Date().toLocaleDateString()}`),
           para(`Total Photos: ${allPhotosToEmbed.length}`),
           para('')
@@ -1468,6 +1648,7 @@
           para('Section 3: On-Site Inspection', 'Heading1'),
           para(`Dam: ${project?.damName || 'Unknown'}`),
           para(`Inspection Date: ${project?.inspectionDate || ''}`),
+          getReportMetaLines(project).map(([k, v]) => para(`${k}: ${v}`)).join(''),
           para(`Generated: ${new Date().toLocaleDateString()}`),
           para(`Total Photos: ${allPhotosToEmbed.length}`),
           para('')
@@ -1603,6 +1784,173 @@ ${manifestEntries}
         setTimeout(() => setStatus(''), 3000);
       };
 
+      // Generate a PDF via the browser's print engine (no extra library, works
+      // offline). Builds a self-contained printable document with photos inline
+      // and prints it from a hidden iframe so the user can "Save as PDF".
+      const generatePdfReport = () => {
+        const project = getCurrentProject();
+        const d = inspectionRef.current;
+        const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        const fieldHtml = (label, value) => `<div class="field"><span class="label">${esc(label)}:</span> ${esc(value || 'N/A')}</div>`;
+
+        const sectionHtml = (sectionId, title, fields) => {
+          const photos = getSectionPhotos(sectionId);
+          let html = `<div class="section"><h3>${esc(title)}</h3>`;
+          fields.forEach(f => { html += fieldHtml(f.label, f.value); });
+          photos.forEach(p => {
+            html += `<div class="photo"><img src="${p.data}"/><div class="caption">${esc(p.caption)}</div></div>`;
+          });
+          html += `</div>`;
+          return html;
+        };
+
+        const metaHtml = getReportMetaLines(project).map(([k, v]) => `<div><b>${esc(k)}:</b> ${esc(v)}</div>`).join('');
+
+        let body =
+          `<h1>Dam Safety Inspection Report</h1>` +
+          `<h2>Section 3: On-Site Inspection</h2>` +
+          `<div class="meta">` +
+            `<div><b>Dam:</b> ${esc(project?.damName || 'Unknown')}</div>` +
+            `<div><b>Inspection Date:</b> ${esc(project?.inspectionDate || '')}</div>` +
+            metaHtml +
+            `<div><b>Generated:</b> ${esc(new Date().toLocaleDateString())}</div>` +
+          `</div>`;
+
+        body += sectionHtml('general', '3.1 General', [
+          { label: 'Access', value: d.general.access },
+          { label: 'Routine Reports', value: d.general.routineReports },
+          { label: 'Emergency Warning', value: d.general.emergencyWarning },
+          { label: 'Illumination', value: d.general.illumination },
+          { label: 'Water Level', value: d.general.waterLevel },
+          { label: 'Weather Conditions', value: d.general.weatherConditions }
+        ]);
+        body += sectionHtml('crest', '3.2 Non-Overspill Crest', [
+          { label: 'Condition', value: d.crest.condition },
+          { label: 'Vegetation', value: d.crest.vegetation },
+          { label: 'Animal Activity', value: d.crest.animalActivity },
+          { label: 'Settlement', value: d.crest.settlement }
+        ]);
+        body += sectionHtml('upstream', '3.3 Upstream Face', [
+          { label: 'Slope Protection', value: d.upstream.slopeProtection },
+          { label: 'Condition', value: d.upstream.condition },
+          { label: 'Vegetation', value: d.upstream.vegetation },
+          { label: 'Animal Burrows', value: d.upstream.animalBurrows }
+        ]);
+        body += sectionHtml('downstream', '3.4 Downstream Face', [
+          { label: 'Slope Protection', value: d.downstream.slopeProtection },
+          { label: 'Condition', value: d.downstream.condition },
+          { label: 'Vegetation', value: d.downstream.vegetation },
+          { label: 'Seepage', value: d.downstream.seepage },
+          { label: 'Animal Activity', value: d.downstream.animalActivity }
+        ]);
+        body += sectionHtml('toe', '3.5 Downstream Toe', [
+          { label: 'Condition', value: d.toe.condition },
+          { label: 'Erosion', value: d.toe.erosion },
+          { label: 'Seepage', value: d.toe.seepage },
+          { label: 'Vegetation', value: d.toe.vegetation },
+          { label: 'Drainage System', value: d.toe.drainageSystem },
+          { label: 'Valley Floor', value: d.toe.valleyFloor }
+        ]);
+        body += sectionHtml('spillway', '3.6 Spillway', [
+          { label: 'Description', value: d.spillway.description },
+          { label: 'Condition', value: d.spillway.condition },
+          { label: 'Vegetation', value: d.spillway.vegetation },
+          { label: 'Erosion', value: d.spillway.erosion }
+        ]);
+        body += sectionHtml('outlet', '3.7 Outlet Works', [
+          { label: 'Description', value: d.outlet.description },
+          { label: 'Operation', value: d.outlet.operation },
+          { label: 'Condition', value: d.outlet.condition },
+          { label: 'Access', value: d.outlet.access },
+          { label: 'Maintenance', value: d.outlet.maintenance },
+          { label: 'Seepage', value: d.outlet.seepage }
+        ]);
+        body += sectionHtml('basin', '3.8 Reservoir Basin', [
+          { label: 'Condition', value: d.basin.condition },
+          { label: 'Erosion', value: d.basin.erosion },
+          { label: 'Seepage', value: d.basin.seepage }
+        ]);
+        body += sectionHtml('monitoring', '3.9 Monitoring', [
+          { label: 'Description', value: d.monitoring.description },
+          { label: 'Settlement Monitoring', value: d.monitoring.settlementMonitoring },
+          { label: 'Seepage Monitoring', value: d.monitoring.seepageMonitoring }
+        ]);
+
+        body += `<div class="section"><h3>3.9.1 Crest Survey</h3><table><thead><tr><th>Ch (m)</th><th>R.L. (m)</th><th>FB (m)</th><th>Comment</th></tr></thead><tbody>`;
+        crestSurvey.forEach(p => {
+          body += `<tr><td>${esc(p.chainage)}</td><td>${esc(p.level)}</td><td>${esc(p.freeboard)}</td><td>${esc(p.comment)}</td></tr>`;
+        });
+        body += `</tbody></table></div>`;
+
+        const styles =
+          `@page { margin: 18mm; }` +
+          `body { font-family: system-ui, -apple-system, sans-serif; color:#111; font-size:12px; line-height:1.4; }` +
+          `h1 { font-size:20px; text-align:center; margin:0 0 2px; }` +
+          `h2 { font-size:13px; font-weight:normal; text-align:center; color:#555; margin:0 0 10px; }` +
+          `h3 { font-size:15px; color:#1e3a5f; border-bottom:2px solid #1e3a5f; padding-bottom:2px; margin:18px 0 6px; }` +
+          `.meta { margin:6px 0 4px; }` +
+          `.field { margin:2px 0; }` +
+          `.field .label { font-weight:600; }` +
+          `.section { page-break-inside:avoid; }` +
+          `.photo { margin:8px 0; page-break-inside:avoid; }` +
+          `.photo img { max-width:100%; max-height:90mm; object-fit:contain; border:1px solid #ccc; display:block; }` +
+          `.caption { font-size:11px; font-style:italic; color:#444; margin-top:2px; }` +
+          `table { border-collapse:collapse; width:100%; font-size:12px; }` +
+          `th,td { border:1px solid #999; padding:3px 6px; text-align:left; }`;
+
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Report_${esc(project?.damName || 'Draft')}_${new Date().toISOString().split('T')[0]}</title><style>${styles}</style></head><body>${body}</body></html>`;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        let removed = false;
+        const removeIframe = () => {
+          if (removed) return;
+          removed = true;
+          try { document.body.removeChild(iframe); } catch (e) {}
+        };
+
+        const triggerPrint = () => {
+          try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.onafterprint = removeIframe;
+            iframe.contentWindow.print();
+          } catch (e) {
+            console.error('PDF print error:', e);
+            removeIframe();
+          }
+          setTimeout(removeIframe, 60000);
+        };
+
+        // Wait for inline photos to decode so they appear in the PDF.
+        const imgs = doc.images;
+        if (imgs.length === 0) {
+          setTimeout(triggerPrint, 150);
+        } else {
+          let loaded = 0, done = false;
+          const check = () => { loaded++; if (loaded >= imgs.length && !done) { done = true; triggerPrint(); } };
+          for (let i = 0; i < imgs.length; i++) {
+            const im = imgs[i];
+            if (im.complete) check();
+            else { im.onload = check; im.onerror = check; }
+          }
+          setTimeout(() => { if (!done) { done = true; triggerPrint(); } }, 3000);
+        }
+        setStatus('Opening print dialog — choose "Save as PDF"');
+        setTimeout(() => setStatus(''), 4000);
+      };
+
       const tabs = [
         { id: 'general', name: '3.1 General' },
         { id: 'crest', name: '3.2 Crest' },
@@ -1615,6 +1963,20 @@ ${manifestEntries}
         { id: 'monitoring', name: '3.9 Monitor' },
         { id: 'survey', name: '3.9.1 Survey' }
       ];
+
+      // True when a section has any user-entered content (drives tab completion dots).
+      const sectionHasContent = (sectionId) => {
+        if (sectionId === 'survey') {
+          return crestSurvey.some(p => (p.level && p.level.trim()) || (p.freeboard && p.freeboard.trim()));
+        }
+        const sec = inspectionRef.current[sectionId];
+        if (!sec || typeof sec !== 'object') return false;
+        return Object.values(sec).some(v => typeof v === 'string' && v.trim().length > 0);
+      };
+
+      const CompletionDot = () => (
+        <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '9999px', background: '#16a34a', marginLeft: '5px', verticalAlign: 'middle' }} />
+      );
 
       // Native textarea
       const NativeTextArea = ({ section, field, rows, placeholder }) => {
@@ -1640,6 +2002,7 @@ ${manifestEntries}
             inspectionRef.current[section][field] = improved;
             initialValueRef.current = improved;
             setWordCount(countWords(improved));
+            scheduleAutoSave();
             if (improved === cur) {
               setStatus('No wording changes needed');
               setTimeout(() => setStatus(''), 2000);
@@ -1668,17 +2031,19 @@ ${manifestEntries}
             inspectionRef.current[section][field] = v;
             setWordCount(w);
           }
+          scheduleAutoSave();
         };
 
         const handleBlur = async () => {
           const cur = textareaRef.current?.value || '';
-          if (cur !== initialValueRef.current && cur.trim().length >= 20 && navigator.onLine) {
+          if (autoPolish && cur !== initialValueRef.current && cur.trim().length >= 20 && navigator.onLine) {
             const improved = await improveTextWithAI(section, field, cur);
             if (improved && improved !== cur && textareaRef.current) {
               textareaRef.current.value = improved;
               inspectionRef.current[section][field] = improved;
               initialValueRef.current = improved;
               setWordCount(countWords(improved));
+              scheduleAutoSave();
             }
           }
         };
@@ -1720,6 +2085,7 @@ ${manifestEntries}
               <label className="text-sm font-semibold text-gray-700">{label}</label>
               <div className="flex gap-1">
                 <button onClick={() => openCamera(section, field)} className="p-2 bg-blue-600 text-white rounded-lg" type="button"><Camera className="w-4 h-4" /></button>
+                <button onClick={() => openGallery(section, field)} className="p-2 bg-blue-800 text-white rounded-lg" type="button" title="Add photos from gallery"><Images className="w-4 h-4" /></button>
                 <button onClick={() => isAudioRec ? stopAudioRecording() : startAudioRecording(section, field)} className={`p-2 rounded-lg ${isAudioRec ? 'bg-red-600 animate-pulse' : 'bg-green-600'} text-white`} type="button">
                   {isAudioRec ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                 </button>
@@ -1767,14 +2133,19 @@ ${manifestEntries}
       }
 
       const currentProject = getCurrentProject();
+      const projectQuery = projectSearch.trim().toLowerCase();
+      const filteredProjects = projectQuery
+        ? projects.filter(p => (p.damName || '').toLowerCase().includes(projectQuery) || (p.inspectionDate || '').toLowerCase().includes(projectQuery))
+        : projects;
 
       return (
         <div className="h-screen flex flex-col bg-gray-100">
           <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} className="hidden" />
+          <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGalleryAdd} className="hidden" />
           <input ref={importFileRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
 
           {!isOnline && (
-            <div className="bg-amber-500 text-white text-center py-1 text-xs flex items-center justify-center gap-1"><WifiOff className="w-3 h-3" /> Offline - Auto AI disabled</div>
+            <div className="bg-amber-500 text-white text-center py-1 text-xs flex items-center justify-center gap-1"><WifiOff className="w-3 h-3" /> Offline — AI polish &amp; live voice transcription unavailable. Audio still records.</div>
           )}
 
           {/* Header */}
@@ -1822,10 +2193,17 @@ ${manifestEntries}
                   <h2 className="font-bold">Select Inspection</h2>
                   <button onClick={() => setShowProjectModal(false)} type="button"><X className="w-5 h-5" /></button>
                 </div>
+                {projects.length > 0 && (
+                  <div className="p-2 border-b">
+                    <input type="text" value={projectSearch} onChange={(e) => setProjectSearch(e.target.value)} placeholder="Search by dam name or date..." className="w-full px-3 py-2 border rounded-lg text-sm" style={{ fontSize: '16px' }} />
+                  </div>
+                )}
                 <div className="overflow-y-auto max-h-[60vh]">
                   {projects.length === 0 ? (
                     <div className="p-6 text-center text-gray-500"><FolderOpen className="w-12 h-12 mx-auto mb-2 opacity-50" /><p>No inspections yet</p></div>
-                  ) : projects.map(project => (
+                  ) : filteredProjects.length === 0 ? (
+                    <div className="p-6 text-center text-gray-500"><p>No inspections match "{projectSearch}"</p></div>
+                  ) : filteredProjects.map(project => (
                     <div key={project.id} className={`p-4 border-b flex items-center justify-between ${project.id === currentProjectId ? 'bg-blue-50' : ''}`}>
                       <button onClick={() => switchProject(project.id)} className="flex-1 text-left" type="button">
                         <div className="font-medium">{project.damName}</div>
@@ -1864,6 +2242,52 @@ ${manifestEntries}
             </div>
           )}
 
+          {/* Dam Details Modal */}
+          {showDamDetailsModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowDamDetailsModal(false)}></div>
+              <div className="relative bg-white rounded-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+                <div className="bg-blue-900 text-white p-4 flex justify-between items-center rounded-t-xl flex-shrink-0">
+                  <h2 className="font-bold">Dam Details</h2>
+                  <button onClick={() => setShowDamDetailsModal(false)} type="button"><X className="w-5 h-5" /></button>
+                </div>
+                <div className="p-4 overflow-y-auto">
+                  <p className="text-xs text-gray-500 mb-3">Appears in report headers. FSL is used to auto-calculate crest-survey freeboard.</p>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Inspector name</label>
+                    <input type="text" value={detailsForm.inspector} onChange={(e) => setDetailsForm(f => ({ ...f, inspector: e.target.value }))} placeholder="e.g. J. Smith" className="w-full px-3 py-2 border rounded-lg" style={{ fontSize: '16px' }} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Registration / Pr.Eng no.</label>
+                    <input type="text" value={detailsForm.registration} onChange={(e) => setDetailsForm(f => ({ ...f, registration: e.target.value }))} placeholder="e.g. Pr.Eng 20230001" className="w-full px-3 py-2 border rounded-lg" style={{ fontSize: '16px' }} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Dam owner</label>
+                    <input type="text" value={detailsForm.owner} onChange={(e) => setDetailsForm(f => ({ ...f, owner: e.target.value }))} placeholder="e.g. Acme Mining Ltd" className="w-full px-3 py-2 border rounded-lg" style={{ fontSize: '16px' }} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input type="text" value={detailsForm.location} onChange={(e) => setDetailsForm(f => ({ ...f, location: e.target.value }))} placeholder="e.g. River / GPS / district" className="w-full px-3 py-2 border rounded-lg" style={{ fontSize: '16px' }} />
+                  </div>
+                  <div className="flex gap-3 mb-3">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">FSL (m)</label>
+                      <input type="number" inputMode="decimal" value={detailsForm.fsl} onChange={(e) => setDetailsForm(f => ({ ...f, fsl: e.target.value }))} placeholder="Full Supply Level" className="w-full px-3 py-2 border rounded-lg" style={{ fontSize: '16px' }} />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Crest level (m)</label>
+                      <input type="number" inputMode="decimal" value={detailsForm.crestLevel} onChange={(e) => setDetailsForm(f => ({ ...f, crestLevel: e.target.value }))} placeholder="Optional" className="w-full px-3 py-2 border rounded-lg" style={{ fontSize: '16px' }} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 p-4 border-t flex-shrink-0">
+                  <button onClick={() => setShowDamDetailsModal(false)} className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg" type="button">Cancel</button>
+                  <button onClick={saveDamDetails} className="flex-1 px-4 py-2 bg-blue-900 text-white rounded-lg font-medium" type="button">Save Details</button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Side Menu */}
           {showMenu && (
             <div className="fixed inset-0 z-50 flex">
@@ -1878,14 +2302,16 @@ ${manifestEntries}
                   {tabs.map(tab => (
                     <button key={tab.id} onClick={() => { setActiveTab(tab.id); setShowMenu(false); }}
                       className={`w-full text-left px-3 py-2 rounded text-sm mb-1 ${activeTab === tab.id ? 'bg-blue-100 text-blue-900 font-medium' : 'hover:bg-gray-100'}`} type="button">
-                      {tab.name}
+                      {tab.name}{sectionHasContent(tab.id) && <CompletionDot />}
                     </button>
                   ))}
                 </div>
                 <div className="border-t p-3">
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Actions</p>
+                  <button onClick={() => { openDamDetails(); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 mb-1 bg-blue-900 text-white rounded text-sm" type="button"><ClipboardList className="w-4 h-4" />Dam Details</button>
                   <button onClick={() => { saveCurrentProject(); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 mb-1 bg-green-600 text-white rounded text-sm" type="button"><Save className="w-4 h-4" />Save</button>
                   <button onClick={() => { exportData(); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 mb-1 bg-blue-600 text-white rounded text-sm" type="button"><Download className="w-4 h-4" />Export JSON</button>
+                  <button onClick={() => { generatePdfReport(); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 mb-1 bg-red-600 text-white rounded text-sm" type="button"><Download className="w-4 h-4" />Export PDF</button>
                   <button onClick={() => { generateReport(); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 mb-1 bg-gray-600 text-white rounded text-sm" type="button"><Download className="w-4 h-4" />Export TXT</button>
                   <button onClick={() => { generateWordReport(); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 mb-1 bg-blue-800 text-white rounded text-sm" type="button"><Download className="w-4 h-4" />Export Word (.docx)</button>
                   <button onClick={() => { generateODTReport(); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 mb-1 bg-teal-600 text-white rounded text-sm" type="button"><Download className="w-4 h-4" />Export ODT</button>
@@ -1906,7 +2332,11 @@ ${manifestEntries}
                     <button onClick={saveAiApiKey} className="flex-1 px-2 py-1 bg-purple-600 text-white rounded text-xs" type="button">Save Key</button>
                     <button onClick={clearAiApiKey} className="flex-1 px-2 py-1 bg-red-600 text-white rounded text-xs" type="button">Clear</button>
                   </div>
-                  <p className="text-xs text-gray-500">Used for AI grammar cleanup only. Stored in this browser on this device.</p>
+                  <button onClick={toggleAutoPolish} className="w-full flex items-center justify-between px-2 py-2 mb-2 bg-gray-100 rounded text-xs" type="button">
+                    <span className="text-gray-700">Auto-polish notes on blur</span>
+                    <span className={`px-2 py-1 rounded ${autoPolish ? 'bg-purple-600 text-white' : 'bg-gray-300 text-gray-600'}`}>{autoPolish ? 'ON' : 'OFF'}</span>
+                  </button>
+                  <p className="text-xs text-gray-500">Used for AI grammar cleanup only. Stored in plain text in this browser on this device — avoid entering your key on shared or public devices, and tap Clear when done. When auto-polish is OFF, notes are only sent to the AI when you tap "Polish This Field".</p>
                 </div>
                 <div className="border-t p-3 text-xs text-gray-500">
                   <p className="flex items-center gap-1"><HardDrive className="w-3 h-3" /> {storageUsed || 'Calculating...'}</p>
@@ -1983,7 +2413,7 @@ ${manifestEntries}
                   {tabs.map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                       className={`px-3 py-2 rounded text-xs whitespace-nowrap ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-gray-100'}`} type="button">
-                      {tab.name}
+                      {tab.name}{sectionHasContent(tab.id) && <CompletionDot />}
                     </button>
                   ))}
                 </div>
@@ -2051,7 +2481,7 @@ ${manifestEntries}
                     <InspectionField label="Seepage monitoring" section="monitoring" field="seepageMonitoring" />
                   </div>)}
                   {activeTab === 'survey' && (<div><h2 className="text-lg font-bold mb-3">3.9.1 Crest Survey</h2>
-                    <p className="text-xs text-gray-600 mb-3">Freeboard auto-calculated from FSL</p>
+                    <p className="text-xs text-gray-600 mb-3">Freeboard (R.L. − FSL) auto-calculated. Set FSL in Menu → Dam Details.</p>
                     <div className="overflow-x-auto -mx-3 px-3">
                       <table className="w-full border text-sm" style={{minWidth:'450px'}}>
                         <thead className="bg-gray-200"><tr>
