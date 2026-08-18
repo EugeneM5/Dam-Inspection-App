@@ -38,12 +38,13 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Treat navigations and the app shell (index.html) as "HTML" so we always try
-// the network first and pick up new app versions without bumping CACHE_NAME.
+// Treat navigations, the app shell (index.html), and manifest.json as
+// network-first so we always pick up new app versions and install metadata
+// (start_url/scope) without bumping CACHE_NAME.
 function isHtmlRequest(request) {
   if (request.mode === 'navigate') return true;
   const url = new URL(request.url);
-  return url.pathname.endsWith('/') || url.pathname.endsWith('/index.html');
+  return url.pathname.endsWith('/') || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/manifest.json');
 }
 
 self.addEventListener('fetch', (event) => {
