@@ -684,6 +684,7 @@
           setProjects(prev => [newProject, ...prev]);
           inspectionRef.current = getEmptyInspection();
           setFieldPhotos({});
+          setFieldAudios({});
           setCrestSurvey([{ chainage: '0', level: '', freeboard: '', comment: 'Left Flank' }]);
           setCurrentProjectId(newProject.id);
           await db.put('settings', { key: 'lastActiveProject', value: newProject.id });
